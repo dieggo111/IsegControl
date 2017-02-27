@@ -15,7 +15,7 @@ class iseg(object):
         self.bytesize = serial.EIGHTBITS
         self.parity = serial.PARITY_NONE
         self.stopbits = serial.STOPBITS_ONE
-        self.timeout = 0.5
+        self.timeout = 0.25
 
 
     def init(self):
@@ -36,33 +36,55 @@ class iseg(object):
         return True
 
 
+    def getVoltage(self):
+
+        self.send_bitwise("U1")
+        answer = self.read_bitwise("U1",10).replace("\r\n","")
+
+        return answer
+
+
     def getPolarity(self):
 
-        self.ser.write(b"P1\r\n")
-        answer = self.ser.readline().decode("utf-8")
+        self.send_bitwise("P1")
+        answer = self.read_bitwise("P1",15).replace("\r\n","")
 
         return answer
 
 
     def getIDN(self):
 
-        self.ser.write(b"#1\r\n")
-        answer = self.ser.readline().decode("utf-8")
+        self.send_bitwise("#1")
+        answer = self.read_bitwise("#1",28).replace("\r\n","")
 
         return answer
 
 
-    def getStatus(self):
+    def send_bitwise(self, cmd):
 
-        self.ser.write("S\r\n")
-        answer = self.ser.readline().decode("utf-8")
+        for c in cmd + "\r\n":
+            self.ser.write(bytes(c, "utf-8"))
+            echo = self.ser.read(1)
+
+        return True
+
+
+    def read_bitwise(self, cmd, n):
+
+        temp = ""
+        answer = ""
+        for i in range(1,n):
+            a = self.ser.read(1).decode("utf-8")
+            temp += a
+
+        answer = temp.replace(cmd,"")
 
         return answer
-
 
 
     def test(self):
 
+        answer = ""
         while True:
             cmd = input("Enter command:")
 
@@ -73,12 +95,11 @@ class iseg(object):
                     self.ser.write(bytes(c, "utf-8"))
                     echo = self.ser.read(1)
 
-                for i in range(1,10):
-                    answer = self.ser.read(1).decode("utf-8")
-                    print(answer)
-                print("\r"+"\n")
-                
-                print("test")
+                for i in range(1,40):
+                    a = self.ser.read(1).decode("utf-8")
+                    answer += a
+                print(self.convert_output(answer))
+                answer = ""
 
         return True
 
@@ -88,4 +109,5 @@ if __name__=='__main__':
 
     i = iseg("/dev/ttyUSB0")
     i.init()
-    i.test()
+    # print(i.getIDN())
+    print(i.getPolarity())
