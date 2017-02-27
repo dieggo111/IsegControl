@@ -38,29 +38,29 @@ class iseg(object):
 
     def getVoltage(self):
 
-        self.send_bitwise("U1")
-        answer = self.read_bitwise("U1",10).replace("\r\n","")
+        self.send_iseg("U1")
+        answer = self.read_iseg("U1",10).replace("\r\n","")
 
         return answer
 
 
     def getPolarity(self):
 
-        self.send_bitwise("P1")
-        answer = self.read_bitwise("P1",15).replace("\r\n","")
+        self.send_iseg("P1")
+        answer = self.read_iseg("P1",15).replace("\r\n","")
 
         return answer
 
 
     def getIDN(self):
 
-        self.send_bitwise("#1")
-        answer = self.read_bitwise("#1",28).replace("\r\n","")
+        self.send_iseg("#1")
+        answer = self.read_iseg("#1",28).replace("\r\n","")
 
         return answer
 
 
-    def send_bitwise(self, cmd):
+    def send_iseg(self, cmd):
 
         for c in cmd + "\r\n":
             self.ser.write(bytes(c, "utf-8"))
@@ -69,20 +69,14 @@ class iseg(object):
         return True
 
 
-    def read_bitwise(self, cmd, n):
+    def read_iseg(self, cmd, n):
 
-        temp = ""
-        answer = ""
-        for i in range(1,n):
-            a = self.ser.read(1).decode("utf-8")
-            temp += a
-
-        answer = temp.replace(cmd,"")
+        answer = self.ser.read(n).decode("utf-8").replace("\r\n"," ")
 
         return answer
 
 
-    def test(self):
+    def test(self, n):
 
         answer = ""
         while True:
@@ -91,14 +85,9 @@ class iseg(object):
             if cmd == "q.":
                 break
             else:
-                for c in cmd + "\r\n":
-                    self.ser.write(bytes(c, "utf-8"))
-                    echo = self.ser.read(1)
-
-                for i in range(1,40):
-                    a = self.ser.read(1).decode("utf-8")
-                    answer += a
-                print(self.convert_output(answer))
+                self.send_iseg(cmd)
+                answer = self.read_iseg(cmd, n)
+                print(answer)
                 answer = ""
 
         return True
@@ -109,5 +98,7 @@ if __name__=='__main__':
 
     i = iseg("/dev/ttyUSB0")
     i.init()
-    # print(i.getIDN())
+    # i.test(30)
+    print(i.getIDN())
+    print(i.getVoltage())
     print(i.getPolarity())
