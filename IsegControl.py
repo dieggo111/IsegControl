@@ -44,6 +44,14 @@ class iseg(object):
         return answer
 
 
+    def getCurrent(self):
+
+        self.send_iseg("I1")
+        answer = self.read_iseg("I1",15).replace("\r\n","")
+
+        return answer
+
+
     def getPolarity(self):
 
         self.send_iseg("P1")
@@ -56,6 +64,36 @@ class iseg(object):
 
         self.send_iseg("#1")
         answer = self.read_iseg("#1",28).replace("\r\n","")
+
+        return answer
+
+
+    def setVoltage(self, val):
+
+        try:
+            val = int(val)
+            if val<0:
+                val = abs(val)
+            else:
+                pass
+        except:
+            raise ValueError("Invalid voltage input.")
+
+        self.send_iseg("D1=" + str(val))
+        answer = self.read_iseg("",10)
+
+        return answer
+
+
+    def setPolarity(self, val):
+
+        if val is not "+" and val is not "-":
+            raise ValueError("Invalid polarity input.")
+        else:
+            pass
+
+        self.send_iseg("P1=" + str(val))
+        answer = self.read_iseg("",10)
 
         return answer
 
@@ -100,5 +138,8 @@ if __name__=='__main__':
     i.init()
     # i.test(30)
     print(i.getIDN())
+    print(i.getCurrent())
     print(i.getVoltage())
+    print(i.setVoltage(0))
     print(i.getPolarity())
+    print(i.setPolarity("+"))
